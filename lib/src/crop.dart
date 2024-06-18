@@ -6,7 +6,7 @@ const _kCropGridColor = Color.fromRGBO(0xd0, 0xd0, 0xd0, 0.9);
 const _kCropOverlayActiveOpacity = 0.3;
 const _kCropOverlayInactiveOpacity = 0.7;
 const _kCropHandleColor = Color.fromRGBO(0xd0, 0xd0, 0xd0, 1.0);
-const _kCropHandleSize = 10.0;
+const _kCropHandleSize = 20.0;
 const _kCropHandleHitSize = 48.0;
 const _kCropMinFraction = 0.1;
 
@@ -177,7 +177,10 @@ class CropState extends State<Crop> with TickerProviderStateMixin, Drag {
   Widget build(BuildContext context) => ConstrainedBox(
         constraints: const BoxConstraints.expand(),
         child: Listener(
-          onPointerDown: (event) => pointers++,
+          onPointerDown: (event) {
+            pointers++;
+            _handle = _hitCropHandle(_getLocalPoint(event.position));
+          },
           onPointerUp: (event) => pointers = 0,
           child: GestureDetector(
             key: _surfaceKey,
@@ -277,14 +280,11 @@ class CropState extends State<Crop> with TickerProviderStateMixin, Drag {
       }
     } else {
       width = 1.0;
-      height = (imageWidth * viewWidth * width) /
-          (imageHeight * viewHeight * (widget.aspectRatio ?? 1.0));
-      if (height > 1.0) {
+      height = 1.0 / viewHeight;
+
+      if (height >= 1.0) {
         height = 1.0;
-        width =
-            ((widget.aspectRatio ?? 1.0) * imageHeight * viewHeight * height) /
-                imageWidth /
-                viewWidth;
+        width = 1.0 / viewWidth;
       }
     }
     final aspectRatio = _maxAreaWidthMap[widget.aspectRatio];
@@ -307,7 +307,7 @@ class CropState extends State<Crop> with TickerProviderStateMixin, Drag {
       setState(() {
         _image = image;
         _scale = imageInfo.scale;
-        _ratio = max(
+        _ratio = min(
           boundaries.width / image.width,
           boundaries.height / image.height,
         );
@@ -339,11 +339,11 @@ class CropState extends State<Crop> with TickerProviderStateMixin, Drag {
     }
 
     final viewRect = Rect.fromLTWH(
-      boundaries.width * _area.left,
-      boundaries.height * _area.top,
-      boundaries.width * _area.width,
+      boundaries.width * _area.left + _kCropHandleSize / 2,
+      boundaries.height * _area.top + _kCropHandleSize / 2,
+      boundaries.width * _area.width + 0,
       boundaries.height * _area.height,
-    ).deflate(_kCropHandleSize / 2);
+    );
 
     if (Rect.fromLTWH(
       viewRect.left - _kCropHandleHitSize / 2,
@@ -389,7 +389,6 @@ class CropState extends State<Crop> with TickerProviderStateMixin, Drag {
     _settleController.stop(canceled: false);
     _lastFocalPoint = details.focalPoint;
     _action = _CropAction.none;
-    _handle = _hitCropHandle(_getLocalPoint(details.focalPoint));
     _startScale = _scale;
     _startView = _view;
   }
@@ -686,12 +685,14 @@ class _CropPainter extends CustomPainter {
         0x0,
         _kCropOverlayActiveOpacity * active +
             _kCropOverlayInactiveOpacity * (1.0 - active));
+
     final boundaries = Rect.fromLTWH(
       rect.width * area.left,
       rect.height * area.top,
       rect.width * area.width,
       rect.height * area.height,
     );
+
     canvas.drawRect(Rect.fromLTRB(0.0, 0.0, rect.width, boundaries.top), paint);
     canvas.drawRect(
         Rect.fromLTRB(0.0, boundaries.bottom, rect.width, rect.height), paint);
@@ -715,6 +716,10 @@ class _CropPainter extends CustomPainter {
     final paint = Paint()
       ..isAntiAlias = true
       ..color = _kCropHandleColor;
+
+    final paint2 = Paint()
+      ..isAntiAlias = true
+      ..color = Colors.blue.withOpacity(0.2);
 
     canvas.drawOval(
       Rect.fromLTWH(
