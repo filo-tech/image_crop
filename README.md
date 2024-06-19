@@ -1,5 +1,10 @@
 # Image Cropping plugin for Flutter
 
+> [!NOTE]
+> Since this library is no more maintained, forked it with the following changes 
+>  - Default image size would center the image inside the crop frame
+>  - Fixed resize issue, making the resize dots more responsive
+
 A flutter plugin to crop image on iOS and Android.
 
 ![Image Cropping Preview](assets/image_cropping_preview.gif)
