@@ -6,7 +6,7 @@ const _kCropGridColor = Color.fromRGBO(0xd0, 0xd0, 0xd0, 0.9);
 const _kCropOverlayActiveOpacity = 0.3;
 const _kCropOverlayInactiveOpacity = 0.7;
 const _kCropHandleColor = Color.fromRGBO(0xd0, 0xd0, 0xd0, 1.0);
-const _kCropHandleSize = 20.0;
+const _kCropHandleSize = 0.0;
 const _kCropHandleHitSize = 48.0;
 const _kCropMinFraction = 0.1;
 
@@ -94,6 +94,12 @@ class CropState extends State<Crop> with TickerProviderStateMixin, Drag {
           _area.height * _view.height / _scale,
         );
 
+  Rect? get area1 => _area;
+
+  Rect? get area2 => _view.isEmpty
+      ? null
+      : _view;
+
   bool get _isEnabled => _view.isEmpty == false && _image != null;
 
   // Saving the length for the widest area for different aspectRatio's
@@ -106,12 +112,24 @@ class CropState extends State<Crop> with TickerProviderStateMixin, Drag {
   void initState() {
     super.initState();
 
+    // final screenWidth = MediaQuery.of(context).size.width;
+    // final screenHeight = MediaQuery.of(context).size.height;
+    // final rectWidth = screenWidth * 0.74;
+    // final rectHeight = screenHeight * 0.19;
+
     _activeController = AnimationController(
       vsync: this,
       value: widget.alwaysShowGrid ? 1.0 : 0.0,
     )..addListener(() => setState(() {}));
     _settleController = AnimationController(vsync: this)
       ..addListener(_settleAnimationChanged);
+
+    // _view = Rect.fromCenter(
+    //   center: Offset(screenWidth / 2,
+    //       (screenHeight / 2) - (rectHeight / 2)),
+    //   width: rectWidth,
+    //   height: rectHeight,
+    // );
   }
 
   @override
@@ -175,7 +193,7 @@ class CropState extends State<Crop> with TickerProviderStateMixin, Drag {
 
   @override
   Widget build(BuildContext context) => ConstrainedBox(
-        constraints: const BoxConstraints.expand(),
+        constraints: BoxConstraints.expand(),
         child: Listener(
           onPointerDown: (event) {
             pointers++;
@@ -268,7 +286,7 @@ class CropState extends State<Crop> with TickerProviderStateMixin, Drag {
     double height;
     double width;
     if ((widget.aspectRatio ?? 1.0) < 1) {
-      height = 1.0;
+      height = 0.3;
       width =
           ((widget.aspectRatio ?? 1.0) * imageHeight * viewHeight * height) /
               imageWidth /
@@ -279,8 +297,8 @@ class CropState extends State<Crop> with TickerProviderStateMixin, Drag {
             (imageHeight * viewHeight * (widget.aspectRatio ?? 1.0));
       }
     } else {
-      width = 1.0;
-      height = 1.0 / viewHeight;
+      width = 0.9;
+      height = 0.23;
 
       if (height >= 1.0) {
         height = 1.0;
@@ -320,6 +338,17 @@ class CropState extends State<Crop> with TickerProviderStateMixin, Drag {
           imageWidth: image.width,
           imageHeight: image.height,
         );
+        final screenWidth = MediaQuery.of(context).size.width;
+        final screenHeight = MediaQuery.of(context).size.height;
+        final rectWidth = screenWidth * 0.74;
+        final rectHeight = screenHeight * 0.19;
+
+        // _view = Rect.fromLTWH(
+        //   0,
+        //   0,
+        //   rectWidth,
+        //   rectHeight,
+        // );
         _view = Rect.fromLTWH(
           (viewWidth - 1.0) / 2,
           (viewHeight - 1.0) / 2,
@@ -617,6 +646,107 @@ class CropState extends State<Crop> with TickerProviderStateMixin, Drag {
   }
 }
 
+// class _CropPainter extends CustomPainter {
+//   final ui.Image? image;
+//   final double ratio;
+//   final Rect view;
+//   final Rect area;
+//   final double scale;
+//   final double active;
+//
+//   _CropPainter({
+//     required this.image,
+//     required this.ratio,
+//     required this.view,
+//     required this.area,
+//     required this.scale,
+//     required this.active,
+//   });
+//
+//   @override
+//   void paint(Canvas canvas, Size size) {
+//     if (image == null) {
+//       return;
+//     }
+//
+//     final paint = Paint()..isAntiAlias = true;
+//     final src = Offset.zero & Size(image!.width.toDouble(), image!.height.toDouble());
+//     final dst = Offset.zero & size;
+//     canvas.drawImageRect(image!, src, dst, paint);
+//
+//     final rect = Rect.fromLTRB(
+//       area.left * size.width,
+//       area.top * size.height,
+//       area.right * size.width,
+//       area.bottom * size.height,
+//     );
+//
+//     // Draw the crop area
+//     canvas.drawRect(
+//       rect,
+//       Paint()
+//         ..color = Colors.white.withOpacity(0.5)
+//         ..style = PaintingStyle.stroke,
+//     );
+//
+//     // Draw the corner boundaries
+//     const double cornerLength = 6.0;
+//     const double cornerWidth = 1.0;
+//     final cornerPaint = Paint()
+//       ..color = Colors.blue
+//       ..strokeWidth = cornerWidth;
+//
+//     canvas.drawLine(
+//       rect.topLeft,
+//       rect.topLeft.translate(cornerLength, 0),
+//       cornerPaint,
+//     );
+//     canvas.drawLine(
+//       rect.topLeft,
+//       rect.topLeft.translate(0, cornerLength),
+//       cornerPaint,
+//     );
+//
+//     canvas.drawLine(
+//       rect.topRight,
+//       rect.topRight.translate(-cornerLength, 0),
+//       cornerPaint,
+//     );
+//     canvas.drawLine(
+//       rect.topRight,
+//       rect.topRight.translate(0, cornerLength),
+//       cornerPaint,
+//     );
+//
+//     canvas.drawLine(
+//       rect.bottomLeft,
+//       rect.bottomLeft.translate(cornerLength, 0),
+//       cornerPaint,
+//     );
+//     canvas.drawLine(
+//       rect.bottomLeft,
+//       rect.bottomLeft.translate(0, -cornerLength),
+//       cornerPaint,
+//     );
+//
+//     canvas.drawLine(
+//       rect.bottomRight,
+//       rect.bottomRight.translate(-cornerLength, 0),
+//       cornerPaint,
+//     );
+//     canvas.drawLine(
+//       rect.bottomRight,
+//       rect.bottomRight.translate(0, -cornerLength),
+//       cornerPaint,
+//     );
+//   }
+//
+//   @override
+//   bool shouldRepaint(covariant CustomPainter oldDelegate) {
+//     return true;
+//   }
+// }
+
 class _CropPainter extends CustomPainter {
   final ui.Image? image;
   final Rect view;
@@ -712,53 +842,55 @@ class _CropPainter extends CustomPainter {
     canvas.restore();
   }
 
-  void _drawHandles(Canvas canvas, Rect boundaries) {
-    final paint = Paint()
-      ..isAntiAlias = true
-      ..color = _kCropHandleColor;
+  void _drawHandles(Canvas canvas, Rect rect) {
+    const double cornerLength = 20.0;
+    const double cornerWidth = 3.0;
+    final cornerPaint = Paint()
+      ..color = Colors.blue
+      ..strokeWidth = cornerWidth;
 
-    final paint2 = Paint()
-      ..isAntiAlias = true
-      ..color = Colors.blue.withOpacity(0.2);
-
-    canvas.drawOval(
-      Rect.fromLTWH(
-        boundaries.left - _kCropHandleSize / 2,
-        boundaries.top - _kCropHandleSize / 2,
-        _kCropHandleSize,
-        _kCropHandleSize,
-      ),
-      paint,
+    canvas.drawLine(
+      Offset(rect.left - cornerWidth, rect.top - cornerWidth/2),
+      Offset(rect.left + cornerLength, rect.top - cornerWidth/2),
+      cornerPaint,
+    );
+    canvas.drawLine(
+      Offset(rect.left - cornerWidth/2, rect.top - cornerWidth),
+      Offset(rect.left - cornerWidth/2, rect.top + cornerLength),
+      cornerPaint,
     );
 
-    canvas.drawOval(
-      Rect.fromLTWH(
-        boundaries.right - _kCropHandleSize / 2,
-        boundaries.top - _kCropHandleSize / 2,
-        _kCropHandleSize,
-        _kCropHandleSize,
-      ),
-      paint,
+    canvas.drawLine(
+      Offset(rect.right + cornerWidth, rect.top - cornerWidth/2),
+      Offset(rect.right - cornerLength, rect.top - cornerWidth/2),
+      cornerPaint,
+    );
+    canvas.drawLine(
+      Offset(rect.right + cornerWidth/2, rect.top - cornerWidth),
+      Offset(rect.right + cornerWidth/2, rect.top + cornerLength),
+      cornerPaint,
     );
 
-    canvas.drawOval(
-      Rect.fromLTWH(
-        boundaries.right - _kCropHandleSize / 2,
-        boundaries.bottom - _kCropHandleSize / 2,
-        _kCropHandleSize,
-        _kCropHandleSize,
-      ),
-      paint,
+    canvas.drawLine(
+      Offset(rect.left - cornerWidth, rect.bottom + cornerWidth/2),
+      Offset(rect.left + cornerLength, rect.bottom + cornerWidth/2),
+      cornerPaint,
+    );
+    canvas.drawLine(
+      Offset(rect.left - cornerWidth/2, rect.bottom + cornerWidth),
+      Offset(rect.left - cornerWidth/2, rect.bottom - cornerLength),
+      cornerPaint,
     );
 
-    canvas.drawOval(
-      Rect.fromLTWH(
-        boundaries.left - _kCropHandleSize / 2,
-        boundaries.bottom - _kCropHandleSize / 2,
-        _kCropHandleSize,
-        _kCropHandleSize,
-      ),
-      paint,
+    canvas.drawLine(
+      Offset(rect.right + cornerWidth, rect.bottom + cornerWidth/2),
+      Offset(rect.right - cornerLength, rect.bottom + cornerWidth/2),
+      cornerPaint,
+    );
+    canvas.drawLine(
+      Offset(rect.right + cornerWidth/2, rect.bottom + cornerWidth),
+      Offset(rect.right + cornerWidth/2, rect.bottom - cornerLength),
+      cornerPaint,
     );
   }
 
