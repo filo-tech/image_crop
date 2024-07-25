@@ -94,12 +94,6 @@ class CropState extends State<Crop> with TickerProviderStateMixin, Drag {
           _area.height * _view.height / _scale,
         );
 
-  Rect? get area1 => _area;
-
-  Rect? get area2 => _view.isEmpty
-      ? null
-      : _view;
-
   bool get _isEnabled => _view.isEmpty == false && _image != null;
 
   // Saving the length for the widest area for different aspectRatio's
@@ -112,24 +106,12 @@ class CropState extends State<Crop> with TickerProviderStateMixin, Drag {
   void initState() {
     super.initState();
 
-    // final screenWidth = MediaQuery.of(context).size.width;
-    // final screenHeight = MediaQuery.of(context).size.height;
-    // final rectWidth = screenWidth * 0.74;
-    // final rectHeight = screenHeight * 0.19;
-
     _activeController = AnimationController(
       vsync: this,
       value: widget.alwaysShowGrid ? 1.0 : 0.0,
     )..addListener(() => setState(() {}));
     _settleController = AnimationController(vsync: this)
       ..addListener(_settleAnimationChanged);
-
-    // _view = Rect.fromCenter(
-    //   center: Offset(screenWidth / 2,
-    //       (screenHeight / 2) - (rectHeight / 2)),
-    //   width: rectWidth,
-    //   height: rectHeight,
-    // );
   }
 
   @override
@@ -148,6 +130,9 @@ class CropState extends State<Crop> with TickerProviderStateMixin, Drag {
   void didChangeDependencies() {
     super.didChangeDependencies();
 
+    const width = 0.9;
+    const height = 0.23;
+    _area = Rect.fromLTWH((1.0 - width) / 2, (1.0 - height) / 2, width, height);
     _getImage();
   }
 
@@ -193,7 +178,7 @@ class CropState extends State<Crop> with TickerProviderStateMixin, Drag {
 
   @override
   Widget build(BuildContext context) => ConstrainedBox(
-        constraints: BoxConstraints.expand(),
+        constraints: const BoxConstraints.expand(),
         child: Listener(
           onPointerDown: (event) {
             pointers++;
@@ -286,7 +271,7 @@ class CropState extends State<Crop> with TickerProviderStateMixin, Drag {
     double height;
     double width;
     if ((widget.aspectRatio ?? 1.0) < 1) {
-      height = 0.3;
+      height = 1.0;
       width =
           ((widget.aspectRatio ?? 1.0) * imageHeight * viewHeight * height) /
               imageWidth /
@@ -297,8 +282,8 @@ class CropState extends State<Crop> with TickerProviderStateMixin, Drag {
             (imageHeight * viewHeight * (widget.aspectRatio ?? 1.0));
       }
     } else {
-      width = 0.9;
-      height = 0.23;
+      width = 1.0;
+      height = 1.0 / viewHeight;
 
       if (height >= 1.0) {
         height = 1.0;
@@ -332,22 +317,11 @@ class CropState extends State<Crop> with TickerProviderStateMixin, Drag {
 
         final viewWidth = boundaries.width / (image.width * _scale * _ratio);
         final viewHeight = boundaries.height / (image.height * _scale * _ratio);
-        _area = _calculateDefaultArea(
-          viewWidth: viewWidth,
-          viewHeight: viewHeight,
-          imageWidth: image.width,
-          imageHeight: image.height,
-        );
-        final screenWidth = MediaQuery.of(context).size.width;
-        final screenHeight = MediaQuery.of(context).size.height;
-        final rectWidth = screenWidth * 0.74;
-        final rectHeight = screenHeight * 0.19;
-
-        // _view = Rect.fromLTWH(
-        //   0,
-        //   0,
-        //   rectWidth,
-        //   rectHeight,
+        // _area = _calculateDefaultArea(
+        //   viewWidth: viewWidth,
+        //   viewHeight: viewHeight,
+        //   imageWidth: image.width,
+        //   imageHeight: image.height,
         // );
         _view = Rect.fromLTWH(
           (viewWidth - 1.0) / 2,
@@ -645,107 +619,6 @@ class CropState extends State<Crop> with TickerProviderStateMixin, Drag {
     }
   }
 }
-
-// class _CropPainter extends CustomPainter {
-//   final ui.Image? image;
-//   final double ratio;
-//   final Rect view;
-//   final Rect area;
-//   final double scale;
-//   final double active;
-//
-//   _CropPainter({
-//     required this.image,
-//     required this.ratio,
-//     required this.view,
-//     required this.area,
-//     required this.scale,
-//     required this.active,
-//   });
-//
-//   @override
-//   void paint(Canvas canvas, Size size) {
-//     if (image == null) {
-//       return;
-//     }
-//
-//     final paint = Paint()..isAntiAlias = true;
-//     final src = Offset.zero & Size(image!.width.toDouble(), image!.height.toDouble());
-//     final dst = Offset.zero & size;
-//     canvas.drawImageRect(image!, src, dst, paint);
-//
-//     final rect = Rect.fromLTRB(
-//       area.left * size.width,
-//       area.top * size.height,
-//       area.right * size.width,
-//       area.bottom * size.height,
-//     );
-//
-//     // Draw the crop area
-//     canvas.drawRect(
-//       rect,
-//       Paint()
-//         ..color = Colors.white.withOpacity(0.5)
-//         ..style = PaintingStyle.stroke,
-//     );
-//
-//     // Draw the corner boundaries
-//     const double cornerLength = 6.0;
-//     const double cornerWidth = 1.0;
-//     final cornerPaint = Paint()
-//       ..color = Colors.blue
-//       ..strokeWidth = cornerWidth;
-//
-//     canvas.drawLine(
-//       rect.topLeft,
-//       rect.topLeft.translate(cornerLength, 0),
-//       cornerPaint,
-//     );
-//     canvas.drawLine(
-//       rect.topLeft,
-//       rect.topLeft.translate(0, cornerLength),
-//       cornerPaint,
-//     );
-//
-//     canvas.drawLine(
-//       rect.topRight,
-//       rect.topRight.translate(-cornerLength, 0),
-//       cornerPaint,
-//     );
-//     canvas.drawLine(
-//       rect.topRight,
-//       rect.topRight.translate(0, cornerLength),
-//       cornerPaint,
-//     );
-//
-//     canvas.drawLine(
-//       rect.bottomLeft,
-//       rect.bottomLeft.translate(cornerLength, 0),
-//       cornerPaint,
-//     );
-//     canvas.drawLine(
-//       rect.bottomLeft,
-//       rect.bottomLeft.translate(0, -cornerLength),
-//       cornerPaint,
-//     );
-//
-//     canvas.drawLine(
-//       rect.bottomRight,
-//       rect.bottomRight.translate(-cornerLength, 0),
-//       cornerPaint,
-//     );
-//     canvas.drawLine(
-//       rect.bottomRight,
-//       rect.bottomRight.translate(0, -cornerLength),
-//       cornerPaint,
-//     );
-//   }
-//
-//   @override
-//   bool shouldRepaint(covariant CustomPainter oldDelegate) {
-//     return true;
-//   }
-// }
 
 class _CropPainter extends CustomPainter {
   final ui.Image? image;
