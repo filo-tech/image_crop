@@ -88,10 +88,10 @@ class CropState extends State<Crop> with TickerProviderStateMixin, Drag {
   Rect? get area => _view.isEmpty
       ? null
       : Rect.fromLTWH(
-          max(_area.left * _view.width / _scale - _view.left, 0),
-          max(_area.top * _view.height / _scale - _view.top, 0),
-          _area.width * _view.width / _scale,
-          _area.height * _view.height / _scale,
+          max(_area.left * _view.width - _view.left, 0),
+          max(_area.top * _view.height - _view.top, 0),
+          _area.width * _view.width,
+          _area.height * _view.height,
         );
 
   bool get _isEnabled => _view.isEmpty == false && _image != null;
