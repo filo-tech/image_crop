@@ -20,6 +20,7 @@ class Crop extends StatefulWidget {
   final double maximumScale;
   final bool alwaysShowGrid;
   final ImageErrorListener? onImageError;
+  final Rect? initialArea;
 
   const Crop({
     Key? key,
@@ -28,6 +29,7 @@ class Crop extends StatefulWidget {
     this.maximumScale = 2.0,
     this.alwaysShowGrid = false,
     this.onImageError,
+    this.initialArea,
   }) : super(key: key);
 
   Crop.file(
@@ -38,6 +40,7 @@ class Crop extends StatefulWidget {
     this.maximumScale = 2.0,
     this.alwaysShowGrid = false,
     this.onImageError,
+    this.initialArea,
   })  : image = FileImage(file, scale: scale),
         super(key: key);
 
@@ -50,6 +53,7 @@ class Crop extends StatefulWidget {
     this.maximumScale = 2.0,
     this.alwaysShowGrid = false,
     this.onImageError,
+    this.initialArea,
   })  : image = AssetImage(assetName, bundle: bundle, package: package),
         super(key: key);
 
@@ -84,6 +88,8 @@ class CropState extends State<Crop> with TickerProviderStateMixin, Drag {
   ImageStreamListener? _imageListener;
 
   double get scale => _area.shortestSide / _scale;
+
+  Rect get rawArea => _area;
 
   Rect? get area => _view.isEmpty
       ? null
@@ -296,12 +302,13 @@ class CropState extends State<Crop> with TickerProviderStateMixin, Drag {
   }
 
   void _updateImage(ImageInfo imageInfo, bool synchronousCall) {
-    final boundaries = _boundaries;
-    if (boundaries == null) {
-      return;
-    }
-
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      if (!mounted) return;
+      final boundaries = _boundaries;
+      if (boundaries == null) {
+        return;
+      }
+      
       final image = imageInfo.image;
 
       setState(() {
@@ -314,7 +321,7 @@ class CropState extends State<Crop> with TickerProviderStateMixin, Drag {
 
         final viewWidth = boundaries.width / (image.width * _scale * _ratio);
         final viewHeight = boundaries.height / (image.height * _scale * _ratio);
-        _area = _calculateDefaultArea(
+        _area = widget.initialArea ?? _calculateDefaultArea(
           viewWidth: viewWidth,
           viewHeight: viewHeight,
           imageWidth: image.width,
